@@ -19,9 +19,9 @@
 #define OPENBCI_BOP 'A' // Begining of stream packet
 
 //PIN CONNECTIONS
-#define ADS_DRDY 9          // ADS data ready pin
-#define ADS_RST	4           // ADS reset pin
-#define BOARD_ADS	8         // ADS chip select
+#define ADS_DRDY 8          // ADS data ready pin
+#define ADS_RST	13           // ADS reset pin
+#define BOARD_ADS	9         // ADS chip select
 #define DAISY_ADS	3         // ADS Daisy chip select
 #define BOTH_ADS 5	        // Slave Select Both ADS chips
 #define SD_SS 2  	          // SD card chip select

@@ -601,7 +601,7 @@ boolean OpenBCI_32bit_Library::boardBeginDebug(int baudRate) {
   curDebugMode = DEBUG_MODE_ON;
 
   // Startup for interrupt
-  boardBeginADSInterrupt();
+  // boardBeginADSInterrupt();
 
   // Do a soft reset
   boardReset();

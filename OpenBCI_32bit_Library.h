@@ -116,6 +116,7 @@ public:
   void    beginPinsDebug(void);
   void    beginPinsDefault(void);
   void    beginPinsDigital(void);
+  void    beginSerial(void);
   void    beginSerial0(void);
   void    beginSerial0(uint32_t);
   void    beginSerial1(void);
@@ -139,6 +140,7 @@ public:
   void    endSerial1(void);
   const char* getBoardMode(void);
   char    getChannelCommandForAsciiChar(char);
+  char    getCharSerial(void);
   char    getCharSerial0(void);
   char    getCharSerial1(void);
   char    getConstrainedChannelNumber(byte);
@@ -151,6 +153,7 @@ public:
   const char* getSampleRate(void);
   char    getTargetSSForConstrainedChannelNumber(byte);
   char    getYesOrNoForAsciiChar(char);
+  boolean hasDataSerial(void);
   boolean hasDataSerial0(void);
   boolean hasDataSerial1(void);
   boolean isADSDataAvailable(void);
@@ -277,6 +280,7 @@ public:
   BLE bufferBLE[BLE_RING_BUFFER_SIZE];
 
   // STRUCTS
+  SerialInfo iSerial;
   SerialInfo iSerial0;
   SerialInfo iSerial1;
 

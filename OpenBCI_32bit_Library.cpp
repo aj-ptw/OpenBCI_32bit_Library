@@ -62,6 +62,21 @@ void OpenBCI_32bit_Library::beginDebug(uint32_t baudRate) {
 * @description Called in every `loop()` and checks `Serial0`
 * @returns {boolean} - `true` if there is data ready to be read
 */
+boolean OpenBCI_32bit_Library::hasDataSerial(void) {
+  // TODO: Need to undo this comment out
+  // if (!Serial0) return false;
+  // if (!iSerial0.rx) return false;
+  if (iSerial.rx && Serial.available()) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+/**
+* @description Called in every `loop()` and checks `Serial0`
+* @returns {boolean} - `true` if there is data ready to be read
+*/
 boolean OpenBCI_32bit_Library::hasDataSerial0(void) {
   // TODO: Need to undo this comment out
   // if (!Serial0) return false;
@@ -86,6 +101,14 @@ boolean OpenBCI_32bit_Library::hasDataSerial1(void) {
   } else {
     return false;
   }
+}
+
+/**
+* @description Called if `hasDataSerial0` is true, returns a char from `Serial`
+* @returns {char} - A char from the serial port
+*/
+char OpenBCI_32bit_Library::getCharSerial(void) {
+  return Serial.read();
 }
 
 /**
@@ -572,6 +595,7 @@ boolean OpenBCI_32bit_Library::boardBegin(void) {
 
 void OpenBCI_32bit_Library::boardBeginADSInterrupt(void) {
   // Startup for interrupt
+  // attachInterrupt(ADS_DRDY, ADS_DRDY_Service, LOW);
   setIntVector(_EXTERNAL_4_VECTOR, ADS_DRDY_Service); // connect interrupt to ISR
   setIntPriority(_EXTERNAL_4_VECTOR, 4, 0); // set interrupt priority and sub priority
   clearIntFlag(_EXTERNAL_4_IRQ); // these two need to be done together
@@ -638,7 +662,20 @@ void OpenBCI_32bit_Library::beginPinsDigital(void) {
  * Used to start Serial0
  */
 void OpenBCI_32bit_Library::beginSerial0(void) {
+  beginSerial();
   beginSerial0(OPENBCI_BAUD_RATE);
+}
+
+/**
+ * Used to start Serial
+ */
+void OpenBCI_32bit_Library::beginSerial() {
+  // Initalize the serial port baud rate
+  if (Serial) Serial.end();
+  Serial.begin(1000000);
+  iSerial.tx = true;
+  iSerial.rx = true;
+  iSerial.baudRate = 1000000;
 }
 
 /**
@@ -1194,6 +1231,7 @@ void OpenBCI_32bit_Library::initializeVariables(void) {
   curTimeSyncMode = TIME_SYNC_MODE_OFF;
 
   // Structs
+  initializeSerialInfo(iSerial);
   initializeSerialInfo(iSerial0);
   initializeSerialInfo(iSerial1);
   bufferBLEReset();
@@ -1290,7 +1328,7 @@ void OpenBCI_32bit_Library::sendChannelData(PACKET_TYPE packetType) {
       }
       sendChannelDataSerialBLE(packetType);
     } else {
-      if (iSerial0.tx || iSerial1.tx) sendChannelDataSerial(packetType);
+      if (iSerial.tx || iSerial0.tx || iSerial1.tx) sendChannelDataSerial(packetType);
     }
   }
 
@@ -2948,6 +2986,9 @@ void OpenBCI_32bit_Library::stopADS()
 }
 
 void OpenBCI_32bit_Library::printSerial(int i) {
+  if (iSerial.tx) {
+    Serial.print(i);
+  }
   if (iSerial0.tx && !commandFromSPI) {
     Serial0.print(i);
   }
@@ -2957,6 +2998,9 @@ void OpenBCI_32bit_Library::printSerial(int i) {
 }
 
 void OpenBCI_32bit_Library::printSerial(char c) {
+  if (iSerial.tx) {
+    Serial.print(c);
+  }
   if (iSerial0.tx && !commandFromSPI) {
     Serial0.print(c);
   }
@@ -2966,6 +3010,9 @@ void OpenBCI_32bit_Library::printSerial(char c) {
 }
 
 void OpenBCI_32bit_Library::printSerial(int c, int arg) {
+  if (iSerial.tx) {
+    Serial.print(c, arg);
+  }
   if (iSerial0.tx && !commandFromSPI) {
     Serial0.print(c, arg);
   }
@@ -3012,6 +3059,9 @@ void OpenBCI_32bit_Library::write(uint8_t b) {
 }
 
 void OpenBCI_32bit_Library::writeSerial(uint8_t c) {
+  if (iSerial.tx) {
+    Serial.write(c);
+  }
   if (iSerial0.tx) {
     Serial0.write(c);
   }

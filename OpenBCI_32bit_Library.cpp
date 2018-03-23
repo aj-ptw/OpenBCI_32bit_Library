@@ -1417,7 +1417,7 @@ void OpenBCI_32bit_Library::sendChannelDataSerialBLE(PACKET_TYPE packetType)  {
 */
 void OpenBCI_32bit_Library::sendChannelDataSerial(PACKET_TYPE packetType)  {
 
-  writeSerial(OPENBCI_BOP); // 1 byte - 0x41
+  writeSerial(0xA0); // 1 byte - 0x41
   writeSerial(sampleCounter); // 1 byte
   ADS_writeChannelData(); // 24 bytes
 

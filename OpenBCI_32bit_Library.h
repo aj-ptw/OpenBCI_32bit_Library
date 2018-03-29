@@ -225,7 +225,7 @@ public:
   void    write(uint8_t);
   void    writeAuxDataSerial(void);
   void    writeChannelSettings(void);
-  void    writeChannelSettings(byte);
+  int     writeChannelSettings(byte);
   void    writeSerial(uint8_t);
   void    writeSpi(uint8_t);
   void    writeTimeCurrent(void);

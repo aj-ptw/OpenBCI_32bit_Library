@@ -1837,7 +1837,8 @@ void OpenBCI_32bit_Library::streamSafeChannelSettingsForChannel(byte channelNumb
     streamStop();
   }
 
-  writeChannelSettings(channelNumber);
+  int retVal = writeChannelSettings(channelNumber);
+  if (curErrorCodeMode == ERROR_CODE_MODE_ON) println(retVal);  
 
   // channelSettingsSetForChannel(channelNumber, powerDown, gain, inputType, bias, srb2, srb1);
 
@@ -2297,9 +2298,9 @@ void OpenBCI_32bit_Library::writeChannelSettings(){
 }
 
 // write settings for a SPECIFIC channel on a given ADS board
-void OpenBCI_32bit_Library::writeChannelSettings(byte N){
+int OpenBCI_32bit_Library::writeChannelSettings(byte N){
 
-  byte setting, startChan, endChan, targetSS;
+  byte confirmation, setting, startChan, endChan, targetSS;
   if(N < 9){  // channels 1-8 on board
     targetSS = BOARD_ADS; startChan = 0; endChan = 8;
   }else{      // channels 9-16 on daisy module
@@ -2323,23 +2324,37 @@ void OpenBCI_32bit_Library::writeChannelSettings(byte N){
   }
   WREG(CH1SET+(N-startChan), setting, targetSS);  // write this channel's register settings
 
+  confirmation = RREG(CH1SET+(N-startChan), targetSS); delay(1);
+  if (confirmation != setting) return RESP_FAILURE_CHANNEL_SET_1 + N;
+
   // add or remove from inclusion in BIAS generation
   setting = RREG(BIAS_SENSP,targetSS);       //get the current P bias settings
   if(channelSettings[N][BIAS_SET] == YES){
     useInBias[N] = true;
     bitSet(setting,N-startChan);    //set this channel's bit to add it to the bias generation
+    WREG(BIAS_SENSP,setting,targetSS); delay(1); //send the modified byte back to the ADS
+    confirmation = RREG(BIAS_SENSP,targetSS); delay(1);
+    if (confirmation != setting) return RESP_FAILURE_CHANNEL_SET_ADD_BIAS_P_1 + N;
   }else{
     useInBias[N] = false;
     bitClear(setting,N-startChan);  // clear this channel's bit to remove from bias generation
+    WREG(BIAS_SENSP,setting,targetSS); delay(1); //send the modified byte back to the ADS
+    confirmation = RREG(BIAS_SENSP,targetSS); delay(1);
+    if (confirmation != setting) return RESP_FAILURE_CHANNEL_SET_REMOVE_BIAS_P_1 + N;
   }
-  WREG(BIAS_SENSP,setting,targetSS); delay(1); //send the modified byte back to the ADS
+
   setting = RREG(BIAS_SENSN,targetSS);       //get the current N bias settings
   if(channelSettings[N][BIAS_SET] == YES){
     bitSet(setting,N-startChan);    //set this channel's bit to add it to the bias generation
+    WREG(BIAS_SENSN,setting,targetSS); delay(1); //send the modified byte back to the ADS
+    confirmation = RREG(BIAS_SENSN,targetSS); delay(1);
+    if (confirmation != setting) return RESP_FAILURE_CHANNEL_SET_ADD_BIAS_N_1 + N;
   }else{
     bitClear(setting,N-startChan);  // clear this channel's bit to remove from bias generation
+    WREG(BIAS_SENSN,setting,targetSS); delay(1); //send the modified byte back to the ADS
+    confirmation = RREG(BIAS_SENSN,targetSS); delay(1);
+    if (confirmation != setting) return RESP_FAILURE_CHANNEL_SET_REMOVE_BIAS_N_1 + N;
   }
-  WREG(BIAS_SENSN,setting,targetSS); delay(1); //send the modified byte back to the ADS
 
   // if SRB1 is closed or open for one channel, it will be the same for all channels
   if(channelSettings[N][SRB1_SET] == YES){
@@ -2359,6 +2374,10 @@ void OpenBCI_32bit_Library::writeChannelSettings(byte N){
     setting = 0x00;     // open SRB1 switch
   }
   WREG(MISC1,setting,targetSS);
+  confirmation = RREG(MISC1,targetSS); delay(1);
+  if (confirmation != setting) return RESP_FAILURE_CHANNEL_SET_SRB1_1 + N;
+
+  return RESP_SUCCESS_CHANNEL_SET_1 + N;    
 }
 
 //  deactivate the given channel.

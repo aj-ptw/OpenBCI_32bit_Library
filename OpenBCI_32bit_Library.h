@@ -109,7 +109,7 @@ public:
   void    accelUpdateAxisData(void);
   void    accelWriteAxisDataSerial(void);
   void    activateAllChannelsToTestCondition(byte testInputCode, byte amplitudeCode, byte freqCode);
-  short   activateChannel(byte);                  // enable the selected channel
+  int     activateChannel(byte);                  // enable the selected channel
   void    ADS_writeChannelData(void);
   void    ADS_writeChannelDataAvgDaisy(void);
   void    ADS_writeChannelDataNoAvgDaisy(void);
@@ -127,7 +127,7 @@ public:
   void    beginSerial1(uint32_t);
   void    boardReset(void);
   void    changeChannelLeadOffDetect();
-  short   changeChannelLeadOffDetect(byte N);
+  int     changeChannelLeadOffDetect(byte N);
   void    channelSettingsArraySetForAll(void);
   void    channelSettingsArraySetForChannel(byte N);
   void    channelSettingsSetForChannel(byte, byte, byte, byte, byte, byte, byte);
@@ -136,7 +136,7 @@ public:
   void    csHigh(int);
   void    configureInternalTestSignal(byte,byte);
   void    configureLeadOffDetection(byte, byte);
-  short   deactivateChannel(byte);                // disable given channel 1-8(16)
+  int     deactivateChannel(byte);                // disable given channel 1-8(16)
   void    disable_accel(void); // stop data acquisition and go into low power mode
   void    enable_accel(byte);  // start acceleromoeter with default settings
   void    endMultiCharCmdTimer(void);
@@ -168,8 +168,10 @@ public:
   void    loop(void);
   void    printAll(char);
   void    printAll(const char *);
+  void    printAll(int);
   void    printlnAll(void);
   void    printlnAll(const char *);
+  void    printlnAll(int);
   void    printlnSerial(void);
   void    printlnSerial(char);
   void    printlnSerial(int);

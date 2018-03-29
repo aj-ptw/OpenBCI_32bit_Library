@@ -1767,7 +1767,10 @@ void OpenBCI_32bit_Library::streamSafeChannelActivate(byte channelNumber) {
 
   // Activate the channel
   int retVal = activateChannel(channelNumber);
-  if (curErrorCodeMode == ERROR_CODE_MODE_ON) println(retVal);
+  if (curErrorCodeMode == ERROR_CODE_MODE_ON) {
+    printAll(retVal); 
+    sendEOT();
+  }
 
   // Restart stream if need be
   if (wasStreaming) {
@@ -1790,7 +1793,10 @@ void OpenBCI_32bit_Library::streamSafeChannelDeactivate(byte channelNumber){
 
   // deactivate the channel
   int retVal = deactivateChannel(channelNumber);
-  if (curErrorCodeMode == ERROR_CODE_MODE_ON) println(retVal);
+  if (curErrorCodeMode == ERROR_CODE_MODE_ON) {
+    printAll(retVal); 
+    sendEOT();
+  }
 
   // Restart stream if need be
   if (wasStreaming) {
@@ -1814,7 +1820,10 @@ void OpenBCI_32bit_Library::streamSafeLeadOffSetForChannel(byte channelNumber, b
   }
 
   uint8_t retVal = changeChannelLeadOffDetect(channelNumber);
-  if (curErrorCodeMode == ERROR_CODE_MODE_ON) println(retVal);
+  if (curErrorCodeMode == ERROR_CODE_MODE_ON) {
+    printAll(retVal); 
+    sendEOT();
+  }
 
   // leadOffSetForChannel(channelNumber, pInput, nInput);
 
@@ -1838,7 +1847,10 @@ void OpenBCI_32bit_Library::streamSafeChannelSettingsForChannel(byte channelNumb
   }
 
   int retVal = writeChannelSettings(channelNumber);
-  if (curErrorCodeMode == ERROR_CODE_MODE_ON) println(retVal);  
+  if (curErrorCodeMode == ERROR_CODE_MODE_ON) {
+    printAll(retVal); 
+    sendEOT();
+  }
 
   // channelSettingsSetForChannel(channelNumber, powerDown, gain, inputType, bias, srb2, srb1);
 
@@ -2230,6 +2242,16 @@ void OpenBCI_32bit_Library::reportDefaultChannelSettings(void){
 //     WREG(MISC1,setting,targetSS);
 // }
 
+int OpenBCI_32bit_Library::offsetErrorCode(int code, byte N, byte targetSS) {
+  if (confirmation != setting) {
+    if (targetSS == DAISY_ADS) {
+      return code + N + OPENBCI_NUMBER_OF_CHANNELS_DEFAULT;
+    } else {
+      return code + N;
+    }
+  }
+}
+
 // write settings for ALL 8 channels for a given ADS board
 // channel settings: powerDown, gain, inputType, SRB2, SRB1
 void OpenBCI_32bit_Library::writeChannelSettings(){
@@ -2325,7 +2347,7 @@ int OpenBCI_32bit_Library::writeChannelSettings(byte N){
   WREG(CH1SET+(N-startChan), setting, targetSS);  // write this channel's register settings
 
   confirmation = RREG(CH1SET+(N-startChan), targetSS); delay(1);
-  if (confirmation != setting) return RESP_FAILURE_CHANNEL_SET_1 + N;
+  if (confirmation != setting) return offsetErrorCode(RESP_FAILURE_CHANNEL_SET_1, N, targetSS);
 
   // add or remove from inclusion in BIAS generation
   setting = RREG(BIAS_SENSP,targetSS);       //get the current P bias settings
@@ -2334,13 +2356,13 @@ int OpenBCI_32bit_Library::writeChannelSettings(byte N){
     bitSet(setting,N-startChan);    //set this channel's bit to add it to the bias generation
     WREG(BIAS_SENSP,setting,targetSS); delay(1); //send the modified byte back to the ADS
     confirmation = RREG(BIAS_SENSP,targetSS); delay(1);
-    if (confirmation != setting) return RESP_FAILURE_CHANNEL_SET_ADD_BIAS_P_1 + N;
+    if (confirmation != setting) return offsetErrorCode(RESP_FAILURE_CHANNEL_SET_ADD_BIAS_P_1, N, targetSS);
   }else{
     useInBias[N] = false;
     bitClear(setting,N-startChan);  // clear this channel's bit to remove from bias generation
     WREG(BIAS_SENSP,setting,targetSS); delay(1); //send the modified byte back to the ADS
     confirmation = RREG(BIAS_SENSP,targetSS); delay(1);
-    if (confirmation != setting) return RESP_FAILURE_CHANNEL_SET_REMOVE_BIAS_P_1 + N;
+    if (confirmation != setting) return offsetErrorCode(RESP_FAILURE_CHANNEL_SET_REMOVE_BIAS_P_1, N, targetSS);
   }
 
   setting = RREG(BIAS_SENSN,targetSS);       //get the current N bias settings
@@ -2348,12 +2370,12 @@ int OpenBCI_32bit_Library::writeChannelSettings(byte N){
     bitSet(setting,N-startChan);    //set this channel's bit to add it to the bias generation
     WREG(BIAS_SENSN,setting,targetSS); delay(1); //send the modified byte back to the ADS
     confirmation = RREG(BIAS_SENSN,targetSS); delay(1);
-    if (confirmation != setting) return RESP_FAILURE_CHANNEL_SET_ADD_BIAS_N_1 + N;
+    if (confirmation != setting) return offsetErrorCode(RESP_FAILURE_CHANNEL_SET_ADD_BIAS_N_1, N, targetSS);
   }else{
     bitClear(setting,N-startChan);  // clear this channel's bit to remove from bias generation
     WREG(BIAS_SENSN,setting,targetSS); delay(1); //send the modified byte back to the ADS
     confirmation = RREG(BIAS_SENSN,targetSS); delay(1);
-    if (confirmation != setting) return RESP_FAILURE_CHANNEL_SET_REMOVE_BIAS_N_1 + N;
+    if (confirmation != setting) return offsetErrorCode(RESP_FAILURE_CHANNEL_SET_REMOVE_BIAS_N_1, N, targetSS);
   }
 
   // if SRB1 is closed or open for one channel, it will be the same for all channels
@@ -2375,9 +2397,9 @@ int OpenBCI_32bit_Library::writeChannelSettings(byte N){
   }
   WREG(MISC1,setting,targetSS);
   confirmation = RREG(MISC1,targetSS); delay(1);
-  if (confirmation != setting) return RESP_FAILURE_CHANNEL_SET_SRB1_1 + N;
+  if (confirmation != setting) return offsetErrorCode(RESP_FAILURE_CHANNEL_SET_SRB1_1, N, targetSS);
 
-  return RESP_SUCCESS_CHANNEL_SET_1 + N;    
+  return offsetErrorCode(RESP_SUCCESS_CHANNEL_SET_1, N, targetSS);
 }
 
 //  deactivate the given channel.
@@ -2398,7 +2420,7 @@ int OpenBCI_32bit_Library::deactivateChannel(byte N) {
   WREG(CH1SET+(N-startChan),setting,targetSS); delay(1);     // write the new value to disable the channel
 
   confirmation = RREG(CH1SET+(N-startChan),targetSS); delay(1);
-  if (confirmation != setting) return RESP_FAILURE_CHANNEL_OFF_1 + N;
+  if (confirmation != setting) return offsetErrorCode(RESP_FAILURE_CHANNEL_OFF_1, N, targetSS); 
 
   //remove the channel from the bias generation...
   setting = RREG(BIAS_SENSP,targetSS); delay(1); //get the current bias settings
@@ -2406,20 +2428,20 @@ int OpenBCI_32bit_Library::deactivateChannel(byte N) {
   WREG(BIAS_SENSP,setting,targetSS); delay(1);   //send the modified byte back to the ADS
 
   confirmation = RREG(BIAS_SENSP,targetSS); delay(1);
-  if (confirmation != setting) return RESP_FAILURE_CHANNEL_OFF_REMOVE_BIAS_P_1 + N;
+  if (confirmation != setting) return offsetErrorCode(RESP_FAILURE_CHANNEL_OFF_REMOVE_BIAS_P_1, N, targetSS);
 
   setting = RREG(BIAS_SENSN,targetSS); delay(1); //get the current bias settings
   bitClear(setting,N-startChan);                  //clear this channel's bit to remove from bias generation
   WREG(BIAS_SENSN,setting,targetSS); delay(1);   //send the modified byte back to the ADS
 
   confirmation = RREG(BIAS_SENSN,targetSS); delay(1);
-  if (confirmation != setting) return RESP_FAILURE_CHANNEL_OFF_REMOVE_BIAS_N_1 + N;
+  if (confirmation != setting) return offsetErrorCode(RESP_FAILURE_CHANNEL_OFF_REMOVE_BIAS_N_1, N, targetSS);
 
   leadOffSettings[N][0] = leadOffSettings[N][1] = NO;
   byte leadOffResult = changeChannelLeadOffDetect(N+1);
   if (leadOffResult < RESP_SUCCESS_LEAD_OFF_1) return leadOffSettings;
 
-  return RESP_SUCCESS_CHANNEL_OFF_1 + N;
+  return offsetErrorCode(RESP_SUCCESS_CHANNEL_OFF_1, N, targetSS);
 }
 
 int OpenBCI_32bit_Library::activateChannel(byte N)
@@ -2444,7 +2466,7 @@ int OpenBCI_32bit_Library::activateChannel(byte N)
   WREG(CH1SET+(N-startChan),setting,targetSS);
 
   confirmation = RREG(CH1SET+(N-startChan),targetSS); delay(1);
-  if (confirmation != setting) return RESP_FAILURE_CHANNEL_ON_1 + N;
+  if (confirmation != setting) return offsetErrorCode(RESP_FAILURE_CHANNEL_ON_1, N, targetSS);
 
   // add or remove from inclusion in BIAS generation
   if(useInBias[N]){channelSettings[N][BIAS_SET] = YES;}else{channelSettings[N][BIAS_SET] = NO;}
@@ -2454,13 +2476,13 @@ int OpenBCI_32bit_Library::activateChannel(byte N)
     useInBias[N] = true;
     WREG(BIAS_SENSP,setting,targetSS); delay(1); //send the modified byte back to the ADS
     confirmation = RREG(BIAS_SENSP,targetSS); delay(1);
-    if (confirmation != setting) return RESP_FAILURE_CHANNEL_ON_ADD_BIAS_P_1 + N;
+    if (confirmation != setting) return offsetErrorCode(RESP_FAILURE_CHANNEL_ON_ADD_BIAS_P_1, N, targetSS);
   }else{
     bitClear(setting,N-startChan);  // clear this channel's bit to remove from bias generation
     useInBias[N] = false;
     WREG(BIAS_SENSP,setting,targetSS); delay(1); //send the modified byte back to the ADS
     confirmation = RREG(BIAS_SENSP,targetSS); delay(1);
-    if (confirmation != setting) return RESP_FAILURE_CHANNEL_ON_REMOVE_BIAS_P_1 + N;
+    if (confirmation != setting) return offsetErrorCode(RESP_FAILURE_CHANNEL_ON_REMOVE_BIAS_P_1, N, targetSS);
   }
 
   setting = RREG(BIAS_SENSN,targetSS);       //get the current N bias settings
@@ -2468,12 +2490,12 @@ int OpenBCI_32bit_Library::activateChannel(byte N)
     bitSet(setting,N-startChan);    //set this channel's bit to add it to the bias generation
     WREG(BIAS_SENSN,setting,targetSS); delay(1); //send the modified byte back to the ADS
     confirmation = RREG(BIAS_SENSN,targetSS); delay(1);
-    if (confirmation != setting) return RESP_FAILURE_CHANNEL_ON_ADD_BIAS_N_1 + N;
+    if (confirmation != setting) return offsetErrorCode(RESP_FAILURE_CHANNEL_ON_ADD_BIAS_N_1, N, targetSS);
   } else {
     bitClear(setting,N-startChan);  // clear this channel's bit to remove from bias generation
     WREG(BIAS_SENSN,setting,targetSS); delay(1); //send the modified byte back to the ADS
     confirmation = RREG(BIAS_SENSN,targetSS); delay(1);
-    if (confirmation != setting) return RESP_FAILURE_CHANNEL_ON_REMOVE_BIAS_N_1 + N;
+    if (confirmation != setting) return offsetErrorCode(RESP_FAILURE_CHANNEL_ON_REMOVE_BIAS_N_1, N, targetSS);
   }
   
   setting = 0x00;
@@ -2481,9 +2503,9 @@ int OpenBCI_32bit_Library::activateChannel(byte N)
   if(targetSS == DAISY_ADS && daisyUseSRB1 == true) setting = 0x20;
   WREG(MISC1,setting,targetSS);     // close all SRB1 swtiches
   confirmation = RREG(MISC1,targetSS); delay(1);
-  if (confirmation != setting) return RESP_FAILURE_CHANNEL_ON_SRB1_1 + N;
+  if (confirmation != setting) return offsetErrorCode(RESP_FAILURE_CHANNEL_ON_SRB1_1, N, targetSS);
 
-  return RESP_SUCCESS_CHANNEL_ON_1 + N;  
+  return offsetErrorCode(RESP_SUCCESS_CHANNEL_ON_1, N, targetSS);
 }
 
 // change the lead off detect settings for all channels
@@ -2548,13 +2570,13 @@ int OpenBCI_32bit_Library::changeChannelLeadOffDetect(byte N)
   }
   WREG(LOFF_SENSP,P_setting,targetSS); delay(1);
   confirmation = RREG(LOFF_SENSP,targetSS); delay(1);
-  if (confirmation != P_setting) return RESP_FAILURE_LEAD_OFF_P_1 + N;
+  if (confirmation != P_setting) return offsetErrorCode(RESP_FAILURE_LEAD_OFF_P_1, N, targetSS);
 
   WREG(LOFF_SENSN,N_setting,targetSS); delay(1);
   confirmation = RREG(LOFF_SENSN,targetSS); delay(1);
-  if (confirmation != N_setting) return RESP_FAILURE_LEAD_OFF_N_1 + N;
+  if (confirmation != N_setting) return offsetErrorCode(RESP_FAILURE_LEAD_OFF_N_1, N, targetSS);
 
-  return RESP_SUCCESS_LEAD_OFF_1 + N;
+  return offsetErrorCode(RESP_SUCCESS_LEAD_OFF_1, N, targetSS);
 }
 
 void OpenBCI_32bit_Library::configureLeadOffDetection(byte amplitudeCode, byte freqCode)
@@ -3611,10 +3633,28 @@ void OpenBCI_32bit_Library::printAll(const char *arr) {
   }
 }
 
+void OpenBCI_32bit_Library::printAll(int i) {
+  printSerial(i);
+  if (wifi.present && wifi.tx) {
+    wifi.sendStringMulti(i);
+    delay(1);
+  }
+}
+
 void OpenBCI_32bit_Library::printlnAll(const char *arr) {
   printlnSerial(arr);
   if (wifi.present && wifi.tx) {
     wifi.sendStringMulti(arr);
+    delay(1);
+    wifi.sendStringMulti("\n");
+    delay(1);
+  }
+}
+
+void OpenBCI_32bit_Library::printlnAll(int i) {
+  printlnSerial(i);
+  if (wifi.present && wifi.tx) {
+    wifi.sendStringMulti(i);
     delay(1);
     wifi.sendStringMulti("\n");
     delay(1);

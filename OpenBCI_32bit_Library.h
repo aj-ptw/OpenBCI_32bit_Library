@@ -166,6 +166,7 @@ public:
   void    leadOffSetForChannel(byte, byte, byte);
   void    ledFlash(int);
   void    loop(void);
+  int     offsetErrorCode(int, byte, byte);
   void    printAll(char);
   void    printAll(const char *);
   void    printAll(int);

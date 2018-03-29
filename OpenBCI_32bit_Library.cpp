@@ -2243,12 +2243,10 @@ void OpenBCI_32bit_Library::reportDefaultChannelSettings(void){
 // }
 
 int OpenBCI_32bit_Library::offsetErrorCode(int code, byte N, byte targetSS) {
-  if (confirmation != setting) {
-    if (targetSS == DAISY_ADS) {
-      return code + N + OPENBCI_NUMBER_OF_CHANNELS_DEFAULT;
-    } else {
-      return code + N;
-    }
+  if (targetSS == DAISY_ADS) {
+    return code + N + OPENBCI_NUMBER_OF_CHANNELS_DEFAULT;
+  } else {
+    return code + N;
   }
 }
 
@@ -2326,7 +2324,7 @@ int OpenBCI_32bit_Library::writeChannelSettings(byte N){
   if(N < 9){  // channels 1-8 on board
     targetSS = BOARD_ADS; startChan = 0; endChan = 8;
   }else{      // channels 9-16 on daisy module
-    if(!daisyPresent) { return; }
+    if(!daisyPresent) { return RESP_FAILURE_NO_DAISY_PRESENT; }
     targetSS = DAISY_ADS; startChan = 8; endChan = 16;
   }
   // function accepts channel 1-16, must be 0 indexed to work with array
@@ -2408,7 +2406,7 @@ int OpenBCI_32bit_Library::deactivateChannel(byte N) {
   if(N < 9){
     targetSS = BOARD_ADS; startChan = 0; endChan = 8;
   }else{
-    if(!daisyPresent) { return; }
+    if(!daisyPresent) { return RESP_FAILURE_NO_DAISY_PRESENT; }
     targetSS = DAISY_ADS; startChan = 8; endChan = 16;
   }
   SDATAC(targetSS); delay(1);      // exit Read Data Continuous mode to communicate with ADS
@@ -2439,7 +2437,7 @@ int OpenBCI_32bit_Library::deactivateChannel(byte N) {
 
   leadOffSettings[N][0] = leadOffSettings[N][1] = NO;
   byte leadOffResult = changeChannelLeadOffDetect(N+1);
-  if (leadOffResult < RESP_SUCCESS_LEAD_OFF_1) return leadOffSettings;
+  if (leadOffResult < RESP_SUCCESS_LEAD_OFF_1) return leadOffResult;
 
   return offsetErrorCode(RESP_SUCCESS_CHANNEL_OFF_1, N, targetSS);
 }
@@ -2450,7 +2448,7 @@ int OpenBCI_32bit_Library::activateChannel(byte N)
   if(N < 9){
     targetSS = BOARD_ADS; startChan = 0; endChan = 8;
   }else{
-    if(!daisyPresent) { return; }
+    if(!daisyPresent) { return RESP_FAILURE_NO_DAISY_PRESENT; }    
     targetSS = DAISY_ADS; startChan = 8; endChan = 16;
   }
 
@@ -2549,7 +2547,7 @@ int OpenBCI_32bit_Library::changeChannelLeadOffDetect(byte N)
   if(N < 9){
     targetSS = BOARD_ADS; startChan = 0; endChan = 8;
   }else{
-    if(!daisyPresent) { return; }
+    if(!daisyPresent) { return RESP_FAILURE_NO_DAISY_PRESENT; }    
     targetSS = DAISY_ADS; startChan = 8; endChan = 16;
   }
 

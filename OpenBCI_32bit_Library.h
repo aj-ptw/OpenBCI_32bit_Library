@@ -22,6 +22,11 @@ public:
     ACCEL_MODE_OFF
   };
 
+  typedef enum ERROR_CODE_MODE {
+    ERROR_CODE_MODE_ON,
+    ERROR_CODE_MODE_OFF
+  };
+
   typedef enum TIME_SYNC_MODE {
     TIME_SYNC_MODE_ON,
     TIME_SYNC_MODE_OFF
@@ -215,6 +220,7 @@ public:
   void    updateDaisyData(void);
   void    updateDaisyData(boolean);
   void    useAccel(boolean);
+  void    useErrorCodes(boolean);
   void    useTimeStamp(boolean);
   void    write(uint8_t);
   void    writeAuxDataSerial(void);
@@ -269,6 +275,7 @@ public:
   ACCEL_MODE curAccelMode;
   BOARD_MODE curBoardMode;
   DEBUG_MODE curDebugMode;
+  ERROR_CODE_MODE curErrorCodeMode;
   PACKET_TYPE curPacketType;
   SAMPLE_RATE curSampleRate;
   TIME_SYNC_MODE curTimeSyncMode;

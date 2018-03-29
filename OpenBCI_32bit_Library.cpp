@@ -509,6 +509,15 @@ void OpenBCI_32bit_Library::useAccel(boolean yes) {
 }
 
 /**
+ * Used to turn on or off the accel, will change the current packet type!
+ * @param yes {boolean} - True if you want to use it
+ */
+void OpenBCI_32bit_Library::useErrorCodes(boolean yes) {
+  curErrorCodeMode = yes ? ERROR_CODE_MODE_ON : ERROR_CODE_MODE_OFF;
+}
+
+
+/**
  * Used to turn on or off time syncing/stamping, will change the current packet type!
  * @param yes {boolean} - True if you want to use it
  */
@@ -2350,8 +2359,8 @@ void OpenBCI_32bit_Library::writeChannelSettings(byte N){
 }
 
 //  deactivate the given channel.
-void OpenBCI_32bit_Library::deactivateChannel(byte N) {
-  byte setting, startChan, endChan, targetSS;
+uint8_t OpenBCI_32bit_Library::deactivateChannel(byte N) {
+  byte confirmation, setting, startChan, endChan, targetSS;
   if(N < 9){
     targetSS = BOARD_ADS; startChan = 0; endChan = 8;
   }else{
@@ -2366,17 +2375,29 @@ void OpenBCI_32bit_Library::deactivateChannel(byte N) {
   bitClear(setting,3);   // clear bit3 to disclude from SRB2 if used
   WREG(CH1SET+(N-startChan),setting,targetSS); delay(1);     // write the new value to disable the channel
 
+  confirmation = RREG(CH1SET+(N-startChan),targetSS); delay(1);
+  if (confirmation != setting) return RESP_FAILURE_CHANNEL_OFF_1 + N;
+
   //remove the channel from the bias generation...
   setting = RREG(BIAS_SENSP,targetSS); delay(1); //get the current bias settings
   bitClear(setting,N-startChan);                  //clear this channel's bit to remove from bias generation
   WREG(BIAS_SENSP,setting,targetSS); delay(1);   //send the modified byte back to the ADS
 
+  confirmation = RREG(BIAS_SENSP,targetSS); delay(1);
+  if (confirmation != setting) return RESP_FAILURE_CHANNEL_OFF_REMOVE_BIAS_P_1 + N;
+
   setting = RREG(BIAS_SENSN,targetSS); delay(1); //get the current bias settings
   bitClear(setting,N-startChan);                  //clear this channel's bit to remove from bias generation
   WREG(BIAS_SENSN,setting,targetSS); delay(1);   //send the modified byte back to the ADS
 
+  confirmation = RREG(BIAS_SENSN,targetSS); delay(1);
+  if (confirmation != setting) return RESP_FAILURE_CHANNEL_OFF_REMOVE_BIAS_N_1 + N;
+
   leadOffSettings[N][0] = leadOffSettings[N][1] = NO;
-  changeChannelLeadOffDetect(N+1);
+  byte leadOffResult = changeChannelLeadOffDetect(N+1);
+  if (leadOffResult < RESP_SUCCESS_LEAD_OFF_1) return leadOffSettings;
+
+  return RESP_SUCCESS_CHANNEL_OFF_10;
 }
 
 void OpenBCI_32bit_Library::activateChannel(byte N)
@@ -2458,9 +2479,9 @@ void OpenBCI_32bit_Library::changeChannelLeadOffDetect()
 }
 
 // change the lead off detect settings for specified channel
-void OpenBCI_32bit_Library::changeChannelLeadOffDetect(byte N)
+uint8_t OpenBCI_32bit_Library::changeChannelLeadOffDetect(byte N)
 {
-  byte setting, targetSS, startChan, endChan;
+  byte confirmation, setting, targetSS, startChan, endChan;
 
   if(N < 9){
     targetSS = BOARD_ADS; startChan = 0; endChan = 8;
@@ -2484,8 +2505,15 @@ void OpenBCI_32bit_Library::changeChannelLeadOffDetect(byte N)
   }else{
     bitClear(N_setting,N-startChan);
   }
-  WREG(LOFF_SENSP,P_setting,targetSS);
-  WREG(LOFF_SENSN,N_setting,targetSS);
+  WREG(LOFF_SENSP,P_setting,targetSS); delay(1);
+  confirmation = RREG(LOFF_SENSP,targetSS); delay(1);
+  if (confirmation != P_setting) return RESP_FAILURE_LEAD_OFF_P_1 + N;
+
+  WREG(LOFF_SENSN,N_setting,targetSS); delay(1);
+  confirmation = RREG(LOFF_SENSN,targetSS); delay(1);
+  if (confirmation != N_setting) return RESP_FAILURE_LEAD_OFF_N_1 + N;
+
+  return RESP_SUCCESS_LEAD_OFF_1 + N;
 }
 
 void OpenBCI_32bit_Library::configureLeadOffDetection(byte amplitudeCode, byte freqCode)

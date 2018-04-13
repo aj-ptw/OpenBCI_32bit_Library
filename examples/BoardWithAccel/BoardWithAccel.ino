@@ -30,6 +30,7 @@ void loop() {
   }
 
   // Check the serial ports for new data
+  if (board.hasDataSerial()) board.processChar(board.getCharSerial());  
   if (board.hasDataSerial0()) board.processChar(board.getCharSerial0());
   if (board.hasDataSerial1()) board.processChar(board.getCharSerial1());
   board.loop();

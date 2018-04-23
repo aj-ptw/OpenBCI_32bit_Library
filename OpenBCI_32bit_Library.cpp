@@ -1819,7 +1819,7 @@ void OpenBCI_32bit_Library::streamSafeLeadOffSetForChannel(byte channelNumber, b
     streamStop();
   }
 
-  uint8_t retVal = changeChannelLeadOffDetect(channelNumber);
+  int retVal = changeChannelLeadOffDetect(channelNumber);
   if (curErrorCodeMode == ERROR_CODE_MODE_ON) {
     printAll(retVal); 
     sendEOT();
@@ -1894,7 +1894,11 @@ void OpenBCI_32bit_Library::streamSafeSetAllChannelsToDefault(void) {
     streamStop();
   }
 
-  setChannelsToDefault();
+  int retVal = setChannelsToDefault();
+  if (curErrorCodeMode == ERROR_CODE_MODE_ON) {
+    printAll(retVal); 
+    sendEOT();
+  }
 
   // Restart stream if need be
   if (wasStreaming) {
@@ -2031,6 +2035,8 @@ void OpenBCI_32bit_Library::resetADS(int targetSS)
 }
 
 void OpenBCI_32bit_Library::setChannelsToDefault(void){
+  byte confirmation, setting;
+  int retVal = 0;
   for(int i=0; i<numChannels; i++){
     for(int j=0; j<6; j++){
       channelSettings[i][j] = defaultChannelSettings[j];
@@ -2040,17 +2046,42 @@ void OpenBCI_32bit_Library::setChannelsToDefault(void){
   }
   boardUseSRB1 = daisyUseSRB1 = false;
 
-  writeChannelSettings();       // write settings to on-board ADS
+  if (curErrorCodeMode == ERROR_CODE_MODE_ON) {
+    for (int i = 1; i <= numChannels; i++) {
+      retVal = writeChannelSettings(i);
+      if (retVal < RESP_SUCCESS_CHANNEL_SET_1) return retVal;
+    }
+  } else {
+    // write settings to on-board ADS
+    writeChannelSettings(); 
+  }
+
 
   for(int i=0; i<numChannels; i++){   // turn off the impedance measure signal
     leadOffSettings[i][PCHAN] = OFF;
     leadOffSettings[i][NCHAN] = OFF;
   }
-  changeChannelLeadOffDetect(); // write settings to all ADS
+  retVal = changeChannelLeadOffDetect(); // write settings to all ADS
+  if (retVal < RESP_SUCCESS_CHANGE_CHANNEL_LEAD_OFF && curErrorCodeMode == ERROR_CODE_MODE_ON) {
+    return retVal;
+  }
 
+  setting = 0x00;
+  WREG(MISC1, setting, BOARD_ADS);  // open SRB1 switch on-board
+  if (curErrorCodeMode == ERROR_CODE_MODE_ON) {
+    confirmation = RREG(MISC1, BOARD_ADS); delay(1);
+    if (confirmation != setting) return RESP_FAILURE_OPEN_SRB1_SWITCH_ON_BOARD;
+  }
 
-  WREG(MISC1,0x00,BOARD_ADS);  // open SRB1 switch on-board
-  if(daisyPresent){ WREG(MISC1,0x00,DAISY_ADS); } // open SRB1 switch on-daisy
+  if(daisyPresent) { 
+    // open SRB1 switch on-daisy
+    WREG(MISC1,0x00,DAISY_ADS); 
+    if (curErrorCodeMode == ERROR_CODE_MODE_ON) {
+      confirmation = RREG(MISC1, BOARD_ADS); delay(1);
+      if (confirmation != setting) return RESP_FAILURE_OPEN_SRB1_SWITCH_ON_BOARD;
+    }
+  }
+  return RESP_SET_CHANNELS_TO_DEFAULT;
 }
 
 // void OpenBCI_32bit_Library::setChannelsToDefault(void){
@@ -2507,9 +2538,9 @@ int OpenBCI_32bit_Library::activateChannel(byte N)
 }
 
 // change the lead off detect settings for all channels
-void OpenBCI_32bit_Library::changeChannelLeadOffDetect()
+int OpenBCI_32bit_Library::changeChannelLeadOffDetect()
 {
-  byte setting, startChan, endChan, targetSS;
+  byte confirmation, setting, startChan, endChan, targetSS;
 
   for(int b=0; b<2; b++){
     if(b == 0){ targetSS = BOARD_ADS; startChan = 0; endChan = 8; }
@@ -2533,10 +2564,20 @@ void OpenBCI_32bit_Library::changeChannelLeadOffDetect()
       }else{
         bitClear(N_setting,i-startChan);
       }
-      WREG(LOFF_SENSP,P_setting,targetSS);
-      WREG(LOFF_SENSN,N_setting,targetSS);
+      
+    }
+    WREG(LOFF_SENSP,P_setting,targetSS);
+    if (curErrorCodeMode == ERROR_CODE_MODE_ON) {
+      confirmation = RREG(LOFF_SENSP, targetSS); delay(1);
+      if (confirmation != P_setting) return offsetErrorCode(RESP_FAILURE_CHANGE_CHANNEL_LEAD_OFF_SENSE_P, N, targetSS);
+    }
+    WREG(LOFF_SENSN,N_setting,targetSS);
+    if (curErrorCodeMode == ERROR_CODE_MODE_ON) {
+      confirmation = RREG(LOFF_SENSN, targetSS); delay(1);
+      if (confirmation != N_setting) return offsetErrorCode(RESP_FAILURE_CHANGE_CHANNEL_LEAD_OFF_SENSE_N, N, targetSS);
     }
   }
+  return RESP_SUCCESS_CHANGE_CHANNEL_LEAD_OFF;
 }
 
 // change the lead off detect settings for specified channel

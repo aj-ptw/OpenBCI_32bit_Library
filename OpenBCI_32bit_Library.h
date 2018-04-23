@@ -126,7 +126,7 @@ public:
   void    beginSerial1(void);
   void    beginSerial1(uint32_t);
   void    boardReset(void);
-  void    changeChannelLeadOffDetect();
+  int     changeChannelLeadOffDetect();
   int     changeChannelLeadOffDetect(byte N);
   void    channelSettingsArraySetForAll(void);
   void    channelSettingsArraySetForChannel(byte N);
@@ -134,7 +134,7 @@ public:
   boolean checkMultiCharCmdTimer(void);
   void    csLow(int);
   void    csHigh(int);
-  void    configureInternalTestSignal(byte,byte);
+  int     configureInternalTestSignal(byte,byte);
   void    configureLeadOffDetection(byte, byte);
   int     deactivateChannel(byte);                // disable given channel 1-8(16)
   void    disable_accel(void); // stop data acquisition and go into low power mode
@@ -199,7 +199,7 @@ public:
   void    sendChannelData(void);
   void    sendChannelData(PACKET_TYPE);
   void    setBoardMode(uint8_t);
-  void    setChannelsToDefault(void);
+  int     setChannelsToDefault(void);
   void    setCurPacketType(void);
   void    setSampleRate(uint8_t newSampleRateCode);
   void    sendEOT(void);
@@ -307,7 +307,7 @@ private:
   boolean boardBegin(void);
   boolean boardBeginDebug(void);
   boolean boardBeginDebug(int);
-  void    changeInputType(byte);
+  int     changeInputType(byte);
   int     getX(void);
   int     getY(void);
   int     getZ(void);

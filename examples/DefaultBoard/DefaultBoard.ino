@@ -47,6 +47,18 @@ void loop() {
     }
   }
 
+    // Check serial 0 for new data
+  if (board.hasDataSerial()) {
+    // Read one char from the serial 0 port
+    char newChar = board.getCharSerial();
+
+    // Send to the sd library for processing
+    sdProcessChar(newChar);
+
+    // Send to the board library
+    board.processChar(newChar);
+  }
+
   // Check serial 0 for new data
   if (board.hasDataSerial0()) {
     // Read one char from the serial 0 port

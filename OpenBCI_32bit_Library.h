@@ -270,6 +270,8 @@ public:
   short auxData[3]; // This is user faceing
   short axisData[3];
 
+  uint8_t errorCodes[RESP_CODE_END];
+
   unsigned long lastSampleTime;
 
   volatile boolean channelDataAvailable;

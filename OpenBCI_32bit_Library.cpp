@@ -1215,6 +1215,11 @@ void OpenBCI_32bit_Library::initializeVariables(void) {
   initializeSerialInfo(iSerial0);
   initializeSerialInfo(iSerial1);
   bufferBLEReset();
+
+  // Error codes
+  for (int i = 0; i < RESP_CODE_END; i++) {
+    errorCodes[i] = 0;
+  }
 }
 
 void OpenBCI_32bit_Library::initializeSerialInfo(SerialInfo si) {
@@ -1714,16 +1719,28 @@ void OpenBCI_32bit_Library::initialize_ads(){
   resetADS(BOARD_ADS); // reset the on-board ADS registers, and stop DataContinuousMode
   delay(10);
   WREG(CONFIG1,(ADS1299_CONFIG1_DAISY | curSampleRate),BOARD_ADS); // tell on-board ADS to output its clk, set the data rate to 250SPS
+  if (curErrorCodeMode == ERROR_CODE_MODE_ON) {
+    confirmation = RREG(CONFIG1, BOARD_ADS); delay(1);
+    if (confirmation != (ADS1299_CONFIG1_DAISY | curSampleRate)) errorCodes[RESP_FAILURE_SET_ON_ADS_CLK_ON_BOARD]++;
+  }
   delay(40);
   resetADS(DAISY_ADS); // software reset daisy module if present
   delay(10);
   daisyPresent = smellDaisy(); // check to see if daisy module is present
   if(!daisyPresent){
     WREG(CONFIG1, (ADS1299_CONFIG1_DAISY_NOT | curSampleRate), BOARD_ADS); // turn off clk output if no daisy present
+    if (curErrorCodeMode == ERROR_CODE_MODE_ON) {
+      confirmation = RREG(CONFIG1, BOARD_ADS); delay(1);
+      if (confirmation != (ADS1299_CONFIG1_DAISY_NOT | curSampleRate)) errorCodes[RESP_FAILURE_SET_OFF_ADS_CLK_ON_BOARD]++;
+    }
     numChannels = 8;    // expect up to 8 ADS channels
   }else{
     numChannels = 16;   // expect up to 16 ADS channels
     WREG(CONFIG1, (ADS1299_CONFIG1_DAISY_NOT | curSampleRate), DAISY_ADS); // tell on-board ADS to output its clk, set the data rate to 250SPS
+    if (curErrorCodeMode == ERROR_CODE_MODE_ON) {
+      confirmation = RREG(CONFIG1, DAISY_ADS); delay(1);
+      if (confirmation != (ADS1299_CONFIG1_DAISY_NOT | curSampleRate)) errorCodes[RESP_FAILURE_SET_OFF_ADS_CLK_DAISY]++;
+    }
     delay(40);
   }
 
@@ -1747,6 +1764,14 @@ void OpenBCI_32bit_Library::initialize_ads(){
   writeChannelSettings(); // write settings to the on-board and on-daisy ADS if present
 
   WREG(CONFIG3,0b11101100,BOTH_ADS); delay(1);  // enable internal reference drive and etc.
+  if (curErrorCodeMode == ERROR_CODE_MODE_ON) {
+    confirmation = RREG(CONFIG3, BOARD_ADS); delay(1);
+    if (confirmation != 0b11101100) errorCodes[RESP_FAILURE_SET_INTERNAL_REF_ON_BOARD]++;
+    if (daisyPresent) {
+      confirmation = RREG(CONFIG3, DAISY_ADS); delay(1);
+      if (confirmation != 0b11101100) errorCodes[RESP_FAILURE_SET_INTERNAL_REF_DAISY]++;
+    }
+  }
   for(int i=0; i<numChannels; i++){  // turn off the impedance measure signal
     leadOffSettings[i][PCHAN] = OFF;
     leadOffSettings[i][NCHAN] = OFF;
@@ -2058,7 +2083,10 @@ int OpenBCI_32bit_Library::setChannelsToDefault(void){
   if (curErrorCodeMode == ERROR_CODE_MODE_ON) {
     for (int i = 1; i <= numChannels; i++) {
       retVal = writeChannelSettings(i);
-      if (retVal < RESP_SUCCESS_CHANNEL_SET_1) return retVal;
+      if (retVal < RESP_SUCCESS_CHANNEL_SET_1) {
+        errorCodes[retVal]++;
+        return retVal;
+      } 
     }
   } else {
     // write settings to on-board ADS
@@ -2072,6 +2100,7 @@ int OpenBCI_32bit_Library::setChannelsToDefault(void){
   }
   retVal = changeChannelLeadOffDetect(); // write settings to all ADS
   if (retVal < RESP_SUCCESS_CHANGE_CHANNEL_LEAD_OFF && curErrorCodeMode == ERROR_CODE_MODE_ON) {
+    errorCodes[retVal]++;   
     return retVal;
   }
 
@@ -2079,7 +2108,10 @@ int OpenBCI_32bit_Library::setChannelsToDefault(void){
   WREG(MISC1, setting, BOARD_ADS);  // open SRB1 switch on-board
   if (curErrorCodeMode == ERROR_CODE_MODE_ON) {
     confirmation = RREG(MISC1, BOARD_ADS); delay(1);
-    if (confirmation != setting) return RESP_FAILURE_OPEN_SRB1_SWITCH_ON_BOARD;
+    if (confirmation != setting) {
+      errorCodes[RESP_FAILURE_OPEN_SRB1_SWITCH_ON_BOARD]++;
+      return RESP_FAILURE_OPEN_SRB1_SWITCH_ON_BOARD;
+    }
   }
 
   if(daisyPresent) { 
@@ -2087,7 +2119,10 @@ int OpenBCI_32bit_Library::setChannelsToDefault(void){
     WREG(MISC1,0x00,DAISY_ADS); 
     if (curErrorCodeMode == ERROR_CODE_MODE_ON) {
       confirmation = RREG(MISC1, BOARD_ADS); delay(1);
-      if (confirmation != setting) return RESP_FAILURE_OPEN_SRB1_SWITCH_ON_BOARD;
+      if (confirmation != setting) {
+        errorCodes[RESP_FAILURE_OPEN_SRB1_SWITCH_ON_BOARD]++;
+        return RESP_FAILURE_OPEN_SRB1_SWITCH_ON_BOARD;
+      }
     }
   }
   return RESP_SET_CHANNELS_TO_DEFAULT;

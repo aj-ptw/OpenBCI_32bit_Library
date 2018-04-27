@@ -3,14 +3,14 @@
 #include <OpenBCI_32Bit_Library_Definitions.h>
 
 void setup() {
-  // Bring up the OpenBCI Board
-  board.begin();
-
   // Notify the board we want to use accel data
   board.useAccel(true);
 
   // Notify the board we want to use error codes
   board.useErrorCodes(true);
+
+  // Bring up the OpenBCI Board
+  board.begin();
 }
 
 void loop() {

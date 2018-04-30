@@ -8,6 +8,15 @@ void setup() {
 
   // Notify the board we want to use accel data
   board.useAccel(true);
+
+  board.iSerial0.tx = false;
+  board.iSerial1.tx = false;
+
+  board.setSampleRate(board.SAMPLE_RATE_250);
+
+  board.setChannelsToDefault();
+
+  board.streamStart();
 }
 
 void loop() {

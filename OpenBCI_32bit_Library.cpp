@@ -338,7 +338,7 @@ boolean OpenBCI_32bit_Library::processChar(char character) {
           iSerial0.tx = false;
         }
         // Reads if the command is not from the SPI port and we are not in debug mode
-        if (!commandFromSPI && !iSerial1.tx) {
+        if (!commandFromSPI && (!iSerial.tx || !iSerial1.tx)) {
           // If the sample rate is higher than 250, we need to drop down to 250Hz
           //  to not break the RFduino system that can't handle above 250SPS.
           if (curSampleRate != SAMPLE_RATE_250) {
@@ -2809,7 +2809,7 @@ void OpenBCI_32bit_Library::updateChannelData(void) {
   lastSampleTime = millis();
 
   boolean downsample = true;
-  if (iSerial0.tx == false && iSerial1.baudRate > OPENBCI_BAUD_RATE_MIN_NO_AVG) {
+  if (iSerial0.tx == false && iSerial1.baudRate > OPENBCI_BAUD_RATE_MIN_NO_AVG || iSerial.tx) {
     downsample = false;
   }
 
@@ -3113,7 +3113,7 @@ void OpenBCI_32bit_Library::ADS_writeChannelDataAvgDaisy() {
 }
 
 void OpenBCI_32bit_Library::ADS_writeChannelDataNoAvgDaisy() {
-  if (iSerial1.tx && iSerial1.baudRate > OPENBCI_BAUD_RATE_MIN_NO_AVG) {
+  if (iSerial1.tx && iSerial1.baudRate > OPENBCI_BAUD_RATE_MIN_NO_AVG || iSerial.tx) {
     // Don't run this function if the serial baud rate is not greater then the
     // minimum
     // Always write board ADS data

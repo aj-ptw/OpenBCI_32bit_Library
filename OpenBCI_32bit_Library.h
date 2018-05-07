@@ -6,13 +6,13 @@ insert header here
 #define _____OpenBCI_32bit__
 
 
-#include <DSPI.h>
+#include <SPI.h>
 #include <Arduino.h>
 #include <OpenBCI_Wifi_Master.h>
 #include <OpenBCI_Wifi_Master_Definitions.h>
 #include "OpenBCI_32bit_Library_Definitions.h"
 
-void __USER_ISR ADS_DRDY_Service(void);
+// void __USER_ISR ADS_DRDY_Service(void);
 class OpenBCI_32bit_Library {
 
 public:
@@ -285,7 +285,11 @@ public:
   SerialInfo iSerial1;
 
   // Class Objects
-  DSPI0 spi;  // use DSPI library
+  // DSPI0 spi;  // use DSPI library
+  // SPI.setSpeed(4000000);  // use 4MHz for ADS and LIS3DH
+  SPISettings settingsADS;
+  SPISettings settingsSD;
+  SPISettings settingsLIS;
 
 // #ifdef __OpenBCI_Wifi_Master__
   void    accelWriteAxisDataWifi(void);

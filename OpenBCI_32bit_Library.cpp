@@ -81,11 +81,11 @@ boolean OpenBCI_32bit_Library::hasDataSerial0(void) {
   // TODO: Need to undo this comment out
   // if (!Serial0) return false;
   // if (!iSerial0.rx) return false;
-  if (iSerial0.rx && Serial0.available()) {
-    return true;
-  } else {
+  // if (iSerial0.rx && Serial0.available()) {
+    // return true;
+  // } else {
     return false;
-  }
+  // }
 }
 
 /**
@@ -96,11 +96,11 @@ boolean OpenBCI_32bit_Library::hasDataSerial1(void) {
   // TODO: Need to undo this comment out
   // if (Serial1) return false;
   // if (!iSerial1.rx) return false;
-  if (iSerial1.rx && Serial1.available()) {
-    return true;
-  } else {
+  // if (iSerial1.rx && Serial1.available()) {
+    // return true;
+  // } else {
     return false;
-  }
+  // }
 }
 
 /**
@@ -116,7 +116,7 @@ char OpenBCI_32bit_Library::getCharSerial(void) {
 * @returns {char} - A char from the serial port
 */
 char OpenBCI_32bit_Library::getCharSerial0(void) {
-  return Serial0.read();
+  return ' '; // Serial0.read();
 }
 
 /**
@@ -124,7 +124,7 @@ char OpenBCI_32bit_Library::getCharSerial0(void) {
 * @returns {char} - A char from the serial port
 */
 char OpenBCI_32bit_Library::getCharSerial1(void) {
-  return Serial1.read();
+  return ' '; // Serial1.read();
 }
 
 
@@ -136,9 +136,9 @@ char OpenBCI_32bit_Library::getCharSerial1(void) {
 * @return {boolean} - `true` if the command was recognized, `false` if not
 */
 boolean OpenBCI_32bit_Library::processChar(char character) {
-  if (curBoardMode == BOARD_MODE_DEBUG || curDebugMode == DEBUG_MODE_ON) {
-    Serial1.print("pC: "); Serial1.println(character);
-  }
+  // if (curBoardMode == BOARD_MODE_DEBUG || curDebugMode == DEBUG_MODE_ON) {
+  //   Serial1.print("pC: "); Serial1.println(character);
+  // }
 
   if (checkMultiCharCmdTimer()) {  // we are in a multi char command
     switch (getMultiCharCommand()){
@@ -336,15 +336,6 @@ boolean OpenBCI_32bit_Library::processChar(char character) {
         if (wifi.present && wifi.tx) {
           wifi.sendStringLast("Stream started");
           iSerial0.tx = false;
-        }
-        // Reads if the command is not from the SPI port and we are not in debug mode
-        if (!commandFromSPI && (!iSerial.tx || !iSerial1.tx)) {
-          // If the sample rate is higher than 250, we need to drop down to 250Hz
-          //  to not break the RFduino system that can't handle above 250SPS.
-          if (curSampleRate != SAMPLE_RATE_250) {
-            streamSafeSetSampleRate(SAMPLE_RATE_250);
-            delay(50);
-          }
         }
         streamStart(); // turn on the fire hose
         break;
@@ -580,12 +571,13 @@ boolean OpenBCI_32bit_Library::boardBegin(void) {
   // Initalize the serial port baud rate
   // Set serial 0 to true for rx and tx
   beginPinsDefault();
-  beginSerial0();
-
+  // beginSerial0();
+  beginSerial();
+  
   delay(10);
 
   // Startup the interrupt
-  boardBeginADSInterrupt();
+  // boardBeginADSInterrupt();
 
   // Do a soft reset
   boardReset();
@@ -596,10 +588,10 @@ boolean OpenBCI_32bit_Library::boardBegin(void) {
 void OpenBCI_32bit_Library::boardBeginADSInterrupt(void) {
   // Startup for interrupt
   // attachInterrupt(ADS_DRDY, ADS_DRDY_Service, LOW);
-  setIntVector(_EXTERNAL_4_VECTOR, ADS_DRDY_Service); // connect interrupt to ISR
-  setIntPriority(_EXTERNAL_4_VECTOR, 4, 0); // set interrupt priority and sub priority
-  clearIntFlag(_EXTERNAL_4_IRQ); // these two need to be done together
-  setIntEnable(_EXTERNAL_4_IRQ); // clear any flags before enabing the irq
+  // setIntVector(_EXTERNAL_4_VECTOR, ADS_DRDY_Service); // connect interrupt to ISR
+  // setIntPriority(_EXTERNAL_4_VECTOR, 4, 0); // set interrupt priority and sub priority
+  // clearIntFlag(_EXTERNAL_4_IRQ); // these two need to be done together
+  // setIntEnable(_EXTERNAL_4_IRQ); // clear any flags before enabing the irq
 }
 
 /**
@@ -662,7 +654,6 @@ void OpenBCI_32bit_Library::beginPinsDigital(void) {
  * Used to start Serial0
  */
 void OpenBCI_32bit_Library::beginSerial0(void) {
-  beginSerial();
   beginSerial0(OPENBCI_BAUD_RATE);
 }
 
@@ -683,8 +674,8 @@ void OpenBCI_32bit_Library::beginSerial() {
  */
 void OpenBCI_32bit_Library::beginSerial0(uint32_t baudRate) {
   // Initalize the serial port baud rate
-  if (Serial0) Serial0.end();
-  Serial0.begin(baudRate);
+  // if (Serial0) Serial0.end();
+  // Serial0.begin(baudRate);
   iSerial0.tx = true;
   iSerial0.rx = true;
   iSerial0.baudRate = baudRate;
@@ -706,8 +697,8 @@ void OpenBCI_32bit_Library::beginSerial1(void) {
 */
 void OpenBCI_32bit_Library::beginSerial1(uint32_t baudRate) {
   // Initalize the serial 1 port
-  if (Serial1) Serial1.end();
-  Serial1.begin(baudRate);
+  // if (Serial1) Serial1.end();
+  // Serial1.begin(baudRate);
   iSerial1.tx = true;
   iSerial1.rx = true;
   iSerial1.baudRate = baudRate;
@@ -717,7 +708,7 @@ void OpenBCI_32bit_Library::beginSerial1(uint32_t baudRate) {
  * Used to safely end a serial0 port
  */
 void OpenBCI_32bit_Library::endSerial0(void) {
-  if (Serial0) Serial0.end();
+  // if (Serial0) Serial0.end();
   iSerial0.tx = false;
   iSerial0.rx = false;
 }
@@ -726,7 +717,7 @@ void OpenBCI_32bit_Library::endSerial0(void) {
  * Used to safely end a serial1 port
  */
 void OpenBCI_32bit_Library::endSerial1(void) {
-  if (Serial1) Serial1.end();
+  // if (Serial1) Serial1.end();
   iSerial1.tx = false;
   iSerial1.rx = false;
   iSerial1.baudRate = OPENBCI_BAUD_RATE;
@@ -1186,20 +1177,20 @@ void OpenBCI_32bit_Library::initialize(){
   pinMode(DAISY_ADS, OUTPUT); digitalWrite(DAISY_ADS,HIGH);
   pinMode(LIS3DH_SS,OUTPUT); digitalWrite(LIS3DH_SS,HIGH);
 
-  spi.begin();
-  spi.setSpeed(4000000);  // use 4MHz for ADS and LIS3DH
-  spi.setMode(DSPI_MODE0);  // default to SD card mode!
+  SPI.begin();
+  // SPI.setSpeed(4000000);  // use 4MHz for ADS and LIS3DH
+  // SPI.setMode(DSPI_MODE0);  // default to SD card mode!
   initialize_ads(); // hard reset ADS, set pin directions
   initialize_accel(SCALE_4G); // set pin directions, G scale, DRDY interrupt, power down
 }
 
 // void __USER_ISR ADS_DRDY_Service() {
-void __USER_ISR ADS_DRDY_Service() {
-  clearIntFlag(_EXTERNAL_4_IRQ); // clear the irq, or else it will continually interrupt!
-  if(bitRead(PORTA,0) == 0){
-    board.channelDataAvailable = true;
-  }
-}
+// void __USER_ISR ADS_DRDY_Service() {
+//   clearIntFlag(_EXTERNAL_4_IRQ); // clear the irq, or else it will continually interrupt!
+//   if(bitRead(PORTA,0) == 0){
+//     board.channelDataAvailable = true;
+//   }
+// }
 
 void OpenBCI_32bit_Library::initializeVariables(void) {
   // Bools
@@ -1235,6 +1226,11 @@ void OpenBCI_32bit_Library::initializeVariables(void) {
   initializeSerialInfo(iSerial0);
   initializeSerialInfo(iSerial1);
   bufferBLEReset();
+
+  settingsADS = SPISettings(4000000, MSBFIRST, SPI_MODE1);
+  settingsSD = SPISettings(20000000, MSBFIRST, SPI_MODE0);
+  settingsLIS = SPISettings(4000000, MSBFIRST, SPI_MODE3);
+
 }
 
 void OpenBCI_32bit_Library::initializeSerialInfo(SerialInfo si) {
@@ -1651,7 +1647,7 @@ void OpenBCI_32bit_Library::writeTimeCurrentWifi(uint32_t newTime) {
 byte OpenBCI_32bit_Library::xfer(byte _data)
 {
   byte inByte;
-  inByte = spi.transfer(_data);
+  inByte = SPI.transfer(_data);
   return inByte;
 }
 
@@ -1660,28 +1656,23 @@ void OpenBCI_32bit_Library::csLow(int SS)
 { // select an SPI slave to talk to
   switch(SS){
     case BOARD_ADS:
-      spi.setMode(DSPI_MODE1);
-      spi.setSpeed(4000000);
+      SPI.beginTransaction(settingsADS);
       digitalWrite(BOARD_ADS, LOW);
       break;
     case LIS3DH_SS:
-      spi.setMode(DSPI_MODE3);
-      spi.setSpeed(4000000);
+      SPI.beginTransaction(settingsLIS);
       digitalWrite(LIS3DH_SS, LOW);
       break;
     case SD_SS:
-      spi.setMode(DSPI_MODE0);
-      spi.setSpeed(20000000);
+      SPI.beginTransaction(settingsSD);
       digitalWrite(SD_SS, LOW);
       break;
     case DAISY_ADS:
-      spi.setMode(DSPI_MODE1);
-      spi.setSpeed(4000000);
+      SPI.beginTransaction(settingsADS);
       digitalWrite(DAISY_ADS, LOW);
       break;
     case BOTH_ADS:
-      spi.setMode(DSPI_MODE1);
-      spi.setSpeed(4000000);
+      SPI.beginTransaction(settingsADS);
       digitalWrite(BOARD_ADS,LOW);
       digitalWrite(DAISY_ADS,LOW);
       break;
@@ -1712,8 +1703,7 @@ void OpenBCI_32bit_Library::csHigh(int SS)
     default:
       break;
   }
-  spi.setSpeed(20000000);
-  spi.setMode(DSPI_MODE0);  // DEFAULT TO SD MODE!
+  SPI.endTransaction();
 }
 
 // <<<<<<<<<<<<<<<<<<<<<<<<<  END OF BOARD WIDE FUNCTIONS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -1739,7 +1729,8 @@ void OpenBCI_32bit_Library::initialize_ads(){
   delay(10);
   daisyPresent = smellDaisy(); // check to see if daisy module is present
   if(!daisyPresent){
-    WREG(CONFIG1, (ADS1299_CONFIG1_DAISY_NOT | curSampleRate), BOARD_ADS); // turn off clk output if no daisy present
+    WREG(CONFIG1, (ADS1299_CONFIG1_DAISY | curSampleRate), BOARD_ADS); // turn off clk output if no daisy present
+    // WREG(CONFIG1, (ADS1299_CONFIG1_DAISY_NOT | curSampleRate), BOARD_ADS); // turn off clk output if no daisy present
     numChannels = 8;    // expect up to 8 ADS channels
   }else{
     numChannels = 16;   // expect up to 16 ADS channels
@@ -2989,36 +2980,36 @@ void OpenBCI_32bit_Library::printSerial(int i) {
   if (iSerial.tx) {
     Serial.print(i);
   }
-  if (iSerial0.tx && !commandFromSPI) {
-    Serial0.print(i);
-  }
-  if (iSerial1.tx) {
-    Serial1.print(i);
-  }
+  // if (iSerial0.tx && !commandFromSPI) {
+  //   Serial0.print(i);
+  // }
+  // if (iSerial1.tx) {
+  //   Serial1.print(i);
+  // }
 }
 
 void OpenBCI_32bit_Library::printSerial(char c) {
   if (iSerial.tx) {
     Serial.print(c);
   }
-  if (iSerial0.tx && !commandFromSPI) {
-    Serial0.print(c);
-  }
-  if (iSerial1.tx) {
-    Serial1.print(c);
-  }
+  // if (iSerial0.tx && !commandFromSPI) {
+  //   Serial0.print(c);
+  // }
+  // if (iSerial1.tx) {
+  //   Serial1.print(c);
+  // }
 }
 
 void OpenBCI_32bit_Library::printSerial(int c, int arg) {
   if (iSerial.tx) {
     Serial.print(c, arg);
   }
-  if (iSerial0.tx && !commandFromSPI) {
-    Serial0.print(c, arg);
-  }
-  if (iSerial1.tx) {
-    Serial1.print(c, arg);
-  }
+  // if (iSerial0.tx && !commandFromSPI) {
+  //   Serial0.print(c, arg);
+  // }
+  // if (iSerial1.tx) {
+  //   Serial1.print(c, arg);
+  // }
 }
 
 void OpenBCI_32bit_Library::printSerial(const char *c) {
@@ -3062,12 +3053,12 @@ void OpenBCI_32bit_Library::writeSerial(uint8_t c) {
   if (iSerial.tx) {
     Serial.write(c);
   }
-  if (iSerial0.tx) {
-    Serial0.write(c);
-  }
-  if (iSerial1.tx) {
-    Serial1.write(c);
-  }
+  // if (iSerial0.tx) {
+  //   Serial0.write(c);
+  // }
+  // if (iSerial1.tx) {
+  //   Serial1.write(c);
+  // }
 }
 
 void OpenBCI_32bit_Library::ADS_writeChannelData() {
@@ -3421,16 +3412,16 @@ void OpenBCI_32bit_Library::LIS3DH_zeroAxisData(void){
 byte OpenBCI_32bit_Library::LIS3DH_read(byte reg){
   reg |= READ_REG;                    // add the READ_REG bit
   csLow(LIS3DH_SS);                   // take spi
-  spi.transfer(reg);                  // send reg to read
-  byte inByte = spi.transfer(0x00);   // retrieve data
+  SPI.transfer(reg);                  // send reg to read
+  byte inByte = SPI.transfer(0x00);   // retrieve data
   csHigh(LIS3DH_SS);                  // release spi
   return inByte;
 }
 
 void OpenBCI_32bit_Library::LIS3DH_write(byte reg, byte value){
   csLow(LIS3DH_SS);         // take spi
-  spi.transfer(reg);        // send reg to write
-  spi.transfer(value);      // write value
+  SPI.transfer(reg);        // send reg to write
+  SPI.transfer(value);      // write value
   csHigh(LIS3DH_SS);        // release spi
 }
 
@@ -3438,8 +3429,8 @@ int OpenBCI_32bit_Library::LIS3DH_read16(byte reg){    // use for reading axis d
   int inData;
   reg |= READ_REG | READ_MULTI;   // add the READ_REG and READ_MULTI bits
   csLow(LIS3DH_SS);               // take spi
-  spi.transfer(reg);              // send reg to start reading from
-  inData = spi.transfer(0x00) | (spi.transfer(0x00) << 8);  // get the data and arrange it
+  SPI.transfer(reg);              // send reg to start reading from
+  inData = SPI.transfer(0x00) | (SPI.transfer(0x00) << 8);  // get the data and arrange it
   csHigh(LIS3DH_SS);              // release spi
   return inData;
 }

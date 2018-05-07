@@ -19,8 +19,8 @@
 #define OPENBCI_BOP 'A' // Begining of stream packet
 
 //PIN CONNECTIONS
-#define ADS_DRDY 9          // ADS data ready pin
-#define ADS_RST	13           // ADS reset pin
+#define ADS_DRDY 10          // ADS data ready pin
+#define ADS_RST	4 // was 13           // ADS reset pin
 #define BOARD_ADS	8         // ADS chip select
 #define DAISY_ADS	3         // ADS Daisy chip select
 #define BOTH_ADS 5	        // Slave Select Both ADS chips
@@ -28,7 +28,7 @@
 #define LIS3DH_SS	1         // LIS3DH chip select
 #define LIS3DH_DRDY 0	      // LIS3DH data ready pin
 // #define WIFI_SS 13          // Wifi Chip Select
-#define OPENBCI_PIN_LED 11
+#define OPENBCI_PIN_LED 13
 #define OPENBCI_PIN_PGC 12
 // #define WIFI_RESET 18
 

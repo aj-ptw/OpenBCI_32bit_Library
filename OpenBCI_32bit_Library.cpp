@@ -2319,8 +2319,10 @@ void OpenBCI_32bit_Library::reportDefaultChannelSettings(void){
 
 int OpenBCI_32bit_Library::offsetErrorCode(int code, byte N, byte targetSS) {
   if (targetSS == DAISY_ADS) {
+    errorCodes[code + N + OPENBCI_NUMBER_OF_CHANNELS_DEFAULT]++;
     return code + N + OPENBCI_NUMBER_OF_CHANNELS_DEFAULT;
   } else {
+    errorCodes[code + N]++;
     return code + N;
   }
 }

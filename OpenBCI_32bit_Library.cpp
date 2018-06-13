@@ -2021,13 +2021,17 @@ void OpenBCI_32bit_Library::errorCodesClear() {
 
 
 void OpenBCI_32bit_Library::errorCodesReport() {
+  bool errorCodeFound = false;
+
   printAll("Error codes: ");
   for (int i = 0; i < RESP_CODE_END; i++) {
     for (int j = 0; j < errorCodes[i]; j++) {
       printAll(i);
       printAll(" ");
+      errorCodeFound = true;
     }
   }
+  if (!errorCodeFound) printlnAll("None!");
 }
 
 //////////////////////////////////////////////

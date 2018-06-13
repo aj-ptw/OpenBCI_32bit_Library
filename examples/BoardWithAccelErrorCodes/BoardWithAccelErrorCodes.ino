@@ -9,8 +9,17 @@ void setup() {
   // Notify the board we want to use error codes
   board.useErrorCodes(true);
 
+  // Clear the error codes
+  board.errorCodesClear();
+
   // Bring up the OpenBCI Board
   board.begin();
+
+  // Give extra time for start up message to finish
+  delay(100);
+  
+  // Print out error codes after start up
+  board.errorCodesReport(); board.sendEOT();
 }
 
 void loop() {
@@ -37,3 +46,4 @@ void loop() {
   if (board.hasDataSerial1()) board.processChar(board.getCharSerial1());
   board.loop();
 }
+

@@ -1706,6 +1706,7 @@ void OpenBCI_32bit_Library::csHigh(int SS)
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  ADS1299 FUNCTIONS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 void OpenBCI_32bit_Library::initialize_ads(){
+  byte confirmation;
   // recommended power up sequence requiers >Tpor (~32mS)
   delay(50);
   pinMode(ADS_RST,OUTPUT);

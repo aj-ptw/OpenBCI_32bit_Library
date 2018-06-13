@@ -346,6 +346,10 @@
 #define OPENBCI_WIFI_STATUS ':'
 #define OPENBCI_WIFI_RESET ';'
 
+/** Error Codes */
+#define OPENBCI_ERROR_CODE_REPORT '('
+#define OPENBCI_ERROR_CODE_CLEAR ')'
+
 /** Possible number of channels */
 #define OPENBCI_NUMBER_OF_CHANNELS_DAISY 16
 #define OPENBCI_NUMBER_OF_CHANNELS_DEFAULT 8

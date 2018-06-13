@@ -423,6 +423,15 @@ boolean OpenBCI_32bit_Library::processChar(char character) {
         printAll("v3.2.0");
         sendEOT();
         break;
+      /** Error Codes */
+      case OPENBCI_ERROR_CODE_REPORT: // '('
+        errorCodesReport();
+        sendEOT();
+        break;
+      case OPENBCI_ERROR_CODE_CLEAR: // ')'
+        errorCodesClear();
+        sendEOT();
+        break;
       default:
         return false;
     }
@@ -2001,7 +2010,24 @@ void OpenBCI_32bit_Library::streamStop(){
   if (curBoardMode == BOARD_MODE_DEBUG || curDebugMode == DEBUG_MODE_ON) {
     Serial1.println("ADS Stopped");
   }
+}
 
+void OpenBCI_32bit_Library::errorCodesClear() {
+  for (int i = 0; i < RESP_CODE_END; i++) {
+    errorCodes[i] = 0;
+  }
+  printlnAll("Error Codes Cleared");
+}
+
+
+void OpenBCI_32bit_Library::errorCodesReport() {
+  printAll("Error codes: ");
+  for (int i = 0; i < RESP_CODE_END; i++) {
+    for (int j = 0; j < errorCodes[i]; j++) {
+      printAll(i);
+      printAll(" ");
+    }
+  }
 }
 
 //////////////////////////////////////////////

@@ -142,6 +142,8 @@ public:
   void    endMultiCharCmdTimer(void);
   void    endSerial0(void);
   void    endSerial1(void);
+  void    errorCodesClear(void);
+  void    errorCodesReport(void);
   const char* getBoardMode(void);
   char    getChannelCommandForAsciiChar(char);
   char    getCharSerial0(void);
